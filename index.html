@@ -1,0 +1,2041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoLearn - Environmental Education Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Light Theme Color Palette */
+            --primary: #059669;
+            --primary-light: #10b981;
+            --primary-dark: #047857;
+            --secondary: #3b82f6;
+            --secondary-light: #60a5fa;
+            --accent-orange: #f97316;
+            --accent-yellow: #fbbf24;
+            --accent-pink: #ec4899;
+            
+            /* Neutral Colors */
+            --white: #ffffff;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            /* Semantic Colors */
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+            
+            /* Spacing */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.25rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-10: 2.5rem;
+            --space-12: 3rem;
+            --space-16: 4rem;
+            
+            /* Border Radius */
+            --radius-sm: 0.375rem;
+            --radius: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            --radius-2xl: 1.5rem;
+            --radius-full: 9999px;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+            color: var(--gray-800);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-6);
+        }
+
+        /* Authentication Modal */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+        }
+
+        .auth-card {
+            background: var(--white);
+            padding: var(--space-8);
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            max-width: 400px;
+            margin: var(--space-4);
+            transform: scale(0.9);
+            opacity: 0;
+            animation: modalEnter 0.3s ease forwards;
+        }
+
+        @keyframes modalEnter {
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: var(--space-8);
+        }
+
+        .auth-header h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-2);
+        }
+
+        .auth-header p {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        .form-group {
+            margin-bottom: var(--space-6);
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: var(--gray-700);
+            margin-bottom: var(--space-2);
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--space-3) var(--space-4);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: var(--white);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-3) var(--space-6);
+            border: none;
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            gap: var(--space-2);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+            width: 100%;
+            padding: var(--space-4) var(--space-6);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-200);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-200);
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: var(--space-6);
+            padding-top: var(--space-6);
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .auth-switch button {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: var(--space-12);
+            padding: var(--space-8) 0;
+        }
+
+        .header h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-4);
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        /* Navigation */
+        .nav-container {
+            margin-bottom: var(--space-12);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: var(--space-2);
+            background: var(--white);
+            padding: var(--space-2);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            overflow-x: auto;
+        }
+
+        .nav-btn {
+            padding: var(--space-3) var(--space-6);
+            border: none;
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
+            color: var(--gray-600);
+            white-space: nowrap;
+            min-width: fit-content;
+        }
+
+        .nav-btn:hover {
+            background: var(--gray-100);
+            color: var(--gray-800);
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            color: var(--white);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius-2xl);
+            padding: var(--space-8);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: var(--space-8);
+            border: 1px solid var(--gray-100);
+        }
+
+        .card h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-6);
+            text-align: center;
+        }
+
+        /* Dashboard */
+        .dashboard-hero {
+            display: flex;
+            align-items: center;
+            gap: var(--space-6);
+            margin-bottom: var(--space-8);
+            padding: var(--space-8);
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary-light) 100%);
+            border-radius: var(--radius-2xl);
+            color: var(--white);
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-full);
+            background: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .welcome-text h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: var(--space-2);
+            color: var(--white);
+            text-align: left;
+        }
+
+        .welcome-text p {
+            font-size: 1.125rem;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-6);
+            margin-bottom: var(--space-8);
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-100);
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .stat-number {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        /* Badges */
+        .badges-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-200);
+            transition: all 0.2s ease;
+        }
+
+        .badge:hover {
+            background: var(--gray-100);
+            transform: translateY(-2px);
+        }
+
+        .badge-icon {
+            font-size: 1.5rem;
+        }
+
+        /* Lessons */
+        .lessons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-6);
+        }
+
+        .lesson-card {
+            background: var(--white);
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-100);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .lesson-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--primary);
+        }
+
+        .lesson-icon {
+            font-size: 3rem;
+            margin-bottom: var(--space-4);
+            display: block;
+        }
+
+        .lesson-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--space-3);
+        }
+
+        .lesson-description {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        /* Quiz */
+        .quiz-card {
+            background: var(--white);
+            padding: var(--space-8);
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-100);
+        }
+
+        .quiz-question {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--space-6);
+            text-align: center;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: var(--space-3);
+            margin-bottom: var(--space-6);
+        }
+
+        .quiz-option {
+            padding: var(--space-4);
+            background: var(--gray-50);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .quiz-option:hover {
+            background: var(--gray-100);
+            border-color: var(--primary);
+        }
+
+        .quiz-option.correct {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .quiz-option.incorrect {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .quiz-feedback {
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            margin-top: var(--space-4);
+            font-weight: 500;
+        }
+
+        .quiz-feedback.correct {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .quiz-feedback.incorrect {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+            margin-bottom: var(--space-4);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: var(--radius-full);
+            transition: width 0.5s ease;
+        }
+
+        /* Challenges */
+        .challenge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-6);
+        }
+
+        .challenge-card {
+            background: var(--white);
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-100);
+        }
+
+        .challenge-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: var(--space-3);
+        }
+
+        .challenge-description {
+            color: var(--gray-600);
+            margin-bottom: var(--space-4);
+            line-height: 1.5;
+        }
+
+        .challenge-status {
+            display: inline-block;
+            padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--space-4);
+        }
+
+        .challenge-status.pending {
+            background: rgba(251, 191, 36, 0.1);
+            color: var(--warning);
+        }
+
+        .challenge-status.completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .upload-section {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .file-input {
+            padding: var(--space-3);
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius-lg);
+            background: var(--gray-50);
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            resize: vertical;
+        }
+
+        .file-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--white);
+        }
+
+        /* Leaderboard */
+        .leaderboard-filters {
+            display: flex;
+            gap: var(--space-3);
+            margin-bottom: var(--space-6);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .leaderboard-table th {
+            background: var(--gray-50);
+            padding: var(--space-4);
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray-700);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .leaderboard-table td {
+            padding: var(--space-4);
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .leaderboard-table tr:hover {
+            background: var(--gray-50);
+        }
+
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-full);
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .rank-badge.gold {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: var(--white);
+        }
+
+        .rank-badge.silver {
+            background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 100%);
+            color: var(--white);
+        }
+
+        .rank-badge.bronze {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: var(--white);
+        }
+
+        .rank-badge:not(.gold):not(.silver):not(.bronze) {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: var(--space-6);
+            right: var(--space-6);
+            background: var(--white);
+            color: var(--gray-800);
+            padding: var(--space-4) var(--space-6);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200);
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            max-width: 300px;
+            font-weight: 500;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--error);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--space-4);
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .nav-buttons {
+                justify-content: flex-start;
+            }
+
+            .dashboard-hero {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .welcome-text h2 {
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .lessons-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .challenge-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .leaderboard-table {
+                font-size: 0.875rem;
+            }
+
+            .leaderboard-table th,
+            .leaderboard-table td {
+                padding: var(--space-3);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .badges-container {
+                grid-template-columns: 1fr;
+            }
+
+            .toast {
+                right: var(--space-4);
+                left: var(--space-4);
+                max-width: none;
+            }
+        }
+
+        /* Loading States */
+        .loading-skeleton {
+            background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: var(--radius);
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Confetti Animation */
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            animation: confettiFall 3s linear forwards;
+        }
+
+        /* User Profile Impact */
+        .impact-calculator {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary-light) 100%);
+            padding: var(--space-8);
+            border-radius: var(--radius-2xl);
+            color: var(--white);
+            margin: var(--space-8) 0;
+        }
+
+        .impact-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: var(--space-2);
+        }
+
+        .impact-subtitle {
+            text-align: center;
+            opacity: 0.9;
+            margin-bottom: var(--space-6);
+        }
+
+        .impact-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .impact-stat {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(10px);
+        }
+
+        .impact-number {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--space-1);
+        }
+
+        .impact-label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Modal -->
+    <div id="authModal" class="auth-modal">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2 id="authTitle">Welcome to EcoLearn</h2>
+                <p id="authSubtitle">Sign in to start your environmental journey</p>
+            </div>
+            
+            <form id="authForm">
+                <div class="form-group" id="nameGroup" style="display: none;">
+                    <label class="form-label" for="name">Full Name</label>
+                    <input type="text" id="name" class="form-input" placeholder="Enter your full name">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" id="email" class="form-input" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="authSubmit">Sign In</button>
+            </form>
+            
+            <div class="auth-switch">
+                <p id="authSwitchText">Don't have an account? <button type="button" id="authSwitchBtn">Sign up</button></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="mainApp" style="display: none;">
+        <header class="header">
+            <h1>EcoLearn</h1>
+            <p>Your Daily Environmental Education Platform</p>
+        </header>
+
+        <nav class="nav-container">
+            <div class="nav-buttons" role="tablist">
+                <button class="nav-btn active" onclick="showSection('dashboard')" role="tab" aria-selected="true">
+                    🏠 Dashboard
+                </button>
+                <button class="nav-btn" onclick="showSection('lessons')" role="tab">
+                    📚 Lessons
+                </button>
+                <button class="nav-btn" onclick="showSection('quizzes')" role="tab">
+                    🧠 Quizzes
+                </button>
+                <button class="nav-btn" onclick="showSection('challenges')" role="tab">
+                    🎯 Challenges
+                </button>
+                <button class="nav-btn" onclick="showSection('leaderboard')" role="tab">
+                    🏆 Leaderboard
+                </button>
+                <button class="nav-btn" onclick="showSection('profile')" role="tab">
+                    👤 Profile
+                </button>
+            </div>
+        </nav>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active" role="tabpanel">
+            <div class="dashboard-hero">
+                <div class="user-avatar">🧑‍🎓</div>
+                <div class="welcome-text">
+                    <h2 id="welcomeUser">Welcome back!</h2>
+                    <p>Ready to make a positive environmental impact today?</p>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="userPoints">1,250</div>
+                    <div class="stat-label">Eco Points</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="userLevel">Level 5</div>
+                    <div class="stat-label">🌳 Tree Guardian</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="userBadges">8</div>
+                    <div class="stat-label">Badges Earned</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">85%</div>
+                    <div class="stat-label">Progress</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Recent Achievements 🏅</h2>
+                <div class="badges-container">
+                    <div class="badge">
+                        <span class="badge-icon">💧</span>
+                        <span>Water Saver</span>
+                    </div>
+                    <div class="badge">
+                        <span class="badge-icon">♻️</span>
+                        <span>Recycling Pro</span>
+                    </div>
+                    <div class="badge">
+                        <span class="badge-icon">🌱</span>
+                        <span>Plant Lover</span>
+                    </div>
+                    <div class="badge">
+                        <span class="badge-icon">⚡</span>
+                        <span>Energy Efficient</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lessons Section -->
+        <section id="lessons" class="section" role="tabpanel">
+            <div class="card">
+                <h2>Environmental Lessons</h2>
+                <div class="lessons-grid">
+                    <div class="lesson-card" onclick="openLesson('climate')" tabindex="0" role="button">
+                        <span class="lesson-icon">🌡️</span>
+                        <h3 class="lesson-title">Climate Change</h3>
+                        <p class="lesson-description">Understanding global warming and its impact on our planet</p>
+                    </div>
+                    <div class="lesson-card" onclick="openLesson('water')" tabindex="0" role="button">
+                        <span class="lesson-icon">💧</span>
+                        <h3 class="lesson-title">Water Conservation</h3>
+                        <p class="lesson-description">Learn how to save and protect our precious water resources</p>
+                    </div>
+                    <div class="lesson-card" onclick="openLesson('waste')" tabindex="0" role="button">
+                        <span class="lesson-icon">♻️</span>
+                        <h3 class="lesson-title">Waste Management</h3>
+                        <p class="lesson-description">Reducing, reusing, and recycling for a cleaner world</p>
+                    </div>
+                    <div class="lesson-card" onclick="openLesson('biodiversity')" tabindex="0" role="button">
+                        <span class="lesson-icon">🦎</span>
+                        <h3 class="lesson-title">Biodiversity</h3>
+                        <p class="lesson-description">Protecting our planet's amazing variety of life</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="lesson-content" class="card" style="display: none;">
+                <button class="btn btn-secondary" onclick="closeLessonContent()">← Back to Lessons</button>
+                <div id="lesson-text"></div>
+            </div>
+        </section>
+
+        <!-- Quizzes Section -->
+        <section id="quizzes" class="section" role="tabpanel">
+            <div class="quiz-container">
+                <div class="card">
+                    <h2>Environmental Knowledge Quiz</h2>
+                    <h3 style="margin-bottom: var(--space-6); text-align: center; color: var(--gray-700);">Select a Topic:</h3>
+                    <div style="display: grid; gap: var(--space-4); max-width: 500px; margin: 0 auto;">
+                        <button class="btn btn-primary" onclick="startQuiz('climate')">🌡️ Climate Change Quiz</button>
+                        <button class="btn btn-primary" onclick="startQuiz('water')">💧 Water Conservation Quiz</button>
+                        <button class="btn btn-primary" onclick="startQuiz('waste')">♻️ Waste Management Quiz</button>
+                        <button class="btn btn-primary" onclick="startQuiz('biodiversity')">🦎 Biodiversity Quiz</button>
+                    </div>
+                </div>
+
+                <div id="quiz-area" style="display: none;">
+                    <div class="quiz-card">
+                        <div id="quiz-progress" class="quiz-progress-container"></div>
+                        <div id="quiz-question-container"></div>
+                        <div id="quiz-navigation" style="text-align: center; margin-top: var(--space-6);">
+                            <button class="btn btn-secondary" onclick="closeQuiz()">End Quiz</button>
+                            <button class="btn btn-primary" id="next-question" onclick="nextQuestion()" style="display: none; margin-left: var(--space-3);">Next Question</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Challenges Section -->
+        <section id="challenges" class="section" role="tabpanel">
+            <div class="card">
+                <h2>Real-World Environmental Challenges</h2>
+                <div class="challenge-grid">
+                    <div class="challenge-card">
+                        <h3 class="challenge-title">🌳 Plant a Tree</h3>
+                        <p class="challenge-description">Plant a sapling and contribute to our planet's green cover. Take a photo and share your contribution!</p>
+                        <span class="challenge-status pending">Pending</span>
+                        <div class="upload-section">
+                            <input type="file" class="file-input" accept="image/*" placeholder="Upload photo" aria-label="Upload tree photo">
+                            <textarea class="file-input" placeholder="Describe your tree planting experience..." rows="3" aria-label="Tree planting description"></textarea>
+                            <button class="btn btn-primary" onclick="submitChallenge('tree')">Submit Challenge</button>
+                        </div>
+                    </div>
+                    
+                    <div class="challenge-card">
+                        <h3 class="challenge-title">♻️ Waste Segregation</h3>
+                        <p class="challenge-description">Properly segregate waste at home for a week. Show your organized waste bins!</p>
+                        <span class="challenge-status completed">Completed</span>
+                        <div class="upload-section">
+                            <p style="color: var(--success); font-weight: 600;">✅ Great job! You've earned 200 eco-points!</p>
+                        </div>
+                    </div>
+                    
+                    <div class="challenge-card">
+                        <h3 class="challenge-title">💧 Water Conservation</h3>
+                        <p class="challenge-description">Implement water-saving techniques at home and document your efforts.</p>
+                        <span class="challenge-status pending">Pending</span>
+                        <div class="upload-section">
+                            <input type="file" class="file-input" accept="image/*" placeholder="Upload photo" aria-label="Upload water conservation photo">
+                            <textarea class="file-input" placeholder="Share your water-saving methods..." rows="3" aria-label="Water conservation description"></textarea>
+                            <button class="btn btn-primary" onclick="submitChallenge('water')">Submit Challenge</button>
+                        </div>
+                    </div>
+                    
+                    <div class="challenge-card">
+                        <h3 class="challenge-title">⚡ Energy Saving</h3>
+                        <p class="challenge-description">Reduce your home's energy consumption and track your savings for a month.</p>
+                        <span class="challenge-status pending">Pending</span>
+                        <div class="upload-section">
+                            <input type="file" class="file-input" accept="image/*" placeholder="Upload photo" aria-label="Upload energy saving photo">
+                            <textarea class="file-input" placeholder="Describe your energy-saving actions..." rows="3" aria-label="Energy saving description"></textarea>
+                            <button class="btn btn-primary" onclick="submitChallenge('energy')">Submit Challenge</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Leaderboard Section -->
+        <section id="leaderboard" class="section" role="tabpanel">
+            <div class="card">
+                <h2>🏆 Environmental Champions</h2>
+                <div class="leaderboard-filters">
+                    <button class="btn btn-primary active" onclick="filterLeaderboard('all')">All Students</button>
+                    <button class="btn btn-secondary" onclick="filterLeaderboard('school')">My School</button>
+                    <button class="btn btn-secondary" onclick="filterLeaderboard('class')">My Class</button>
+                </div>
+                
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Student</th>
+                            <th>School</th>
+                            <th>Eco Points</th>
+                            <th>Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="rank-badge gold">1</span></td>
+                            <td>Priya Sharma</td>
+                            <td>Green Valley School</td>
+                            <td>2,450</td>
+                            <td>🌳 Tree Master</td>
+                        </tr>
+                        <tr>
+                            <td><span class="rank-badge silver">2</span></td>
+                            <td>Rahul Patel</td>
+                            <td>Eco International</td>
+                            <td>2,100</td>
+                            <td>🌳 Tree Guardian</td>
+                        </tr>
+                        <tr>
+                            <td><span class="rank-badge bronze">3</span></td>
+                            <td>Sneha Reddy</td>
+                            <td>Nature Academy</td>
+                            <td>1,890</td>
+                            <td>🌳 Tree Guardian</td>
+                        </tr>
+                        <tr style="background: rgba(16, 185, 129, 0.05);">
+                            <td><span class="rank-badge">4</span></td>
+                            <td><strong id="currentUserName">You</strong></td>
+                            <td>Green Valley School</td>
+                            <td><strong id="leaderboardPoints">1,250</strong></td>
+                            <td>🌳 Tree Guardian</td>
+                        </tr>
+                        <tr>
+                            <td><span class="rank-badge">5</span></td>
+                            <td>Ananya Singh</td>
+                            <td>Earth School</td>
+                            <td>1,120</td>
+                            <td>🌿 Sapling</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Profile Section -->
+        <section id="profile" class="section" role="tabpanel">
+            <div class="card">
+                <h2>Your Environmental Profile</h2>
+                
+                <div class="dashboard-hero">
+                    <div class="user-avatar">🧑‍🎓</div>
+                    <div class="welcome-text">
+                        <h2 id="profileName">Your Name</h2>
+                        <p>Environmental Enthusiast | Level 5</p>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Lessons Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">15</div>
+                        <div class="stat-label">Quizzes Taken</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">Challenges Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">45</div>
+                        <div class="stat-label">Days Active</div>
+                    </div>
+                </div>
+
+                <h3 style="color: var(--gray-800); font-family: 'Poppins', sans-serif; font-size: 1.5rem; margin: var(--space-8) 0 var(--space-4);">Progress Overview</h3>
+                <div style="margin: var(--space-6) 0;">
+                    <div style="margin-bottom: var(--space-4);">
+                        <p style="color: var(--gray-700); font-weight: 600; margin-bottom: var(--space-2);">Climate Change:</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 85%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: var(--space-4);">
+                        <p style="color: var(--gray-700); font-weight: 600; margin-bottom: var(--space-2);">Water Conservation:</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 92%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: var(--space-4);">
+                        <p style="color: var(--gray-700); font-weight: 600; margin-bottom: var(--space-2);">Waste Management:</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 78%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: var(--space-4);">
+                        <p style="color: var(--gray-700); font-weight: 600; margin-bottom: var(--space-2);">Biodiversity:</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 65%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="impact-calculator">
+                    <h3 class="impact-title">🌍 Your Environmental Impact</h3>
+                    <p class="impact-subtitle">Based on your completed challenges and activities</p>
+                    <div class="impact-stats">
+                        <div class="impact-stat">
+                            <div class="impact-number">12.5 kg</div>
+                            <div class="impact-label">CO₂ Saved</div>
+                        </div>
+                        <div class="impact-stat">
+                            <div class="impact-number">340 L</div>
+                            <div class="impact-label">Water Saved</div>
+                        </div>
+                        <div class="impact-stat">
+                            <div class="impact-number">8.2 kg</div>
+                            <div class="impact-label">Waste Recycled</div>
+                        </div>
+                        <div class="impact-stat">
+                            <div class="impact-number">3</div>
+                            <div class="impact-label">Trees Planted</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="color: var(--gray-800); font-family: 'Poppins', sans-serif; font-size: 1.5rem; margin: var(--space-8) 0 var(--space-4);">All Badges Earned 🏅</h3>
+                <div class="badges-container">
+                    <div class="badge">
+                        <span class="badge-icon">💧</span>
+                        <span>Water Saver</span>
+                    </div>
+                    <div class="badge">
+                        <span class="badge-icon">♻️</span>
+                        <span>Recycling Pro</span>
+                    </div>
+                    <div class="badge">
+                        <span class="badge-icon">🌱</span>
+                        <span>Plant Lover</span>
+                    </div>
+                    <div class="badge">
+                        <span class="badge-icon">⚡</span>
+                        <span>Energy Efficient</span>
+                    </div>
+                    <div class="badge">
+                        <span class="badge-icon">🏆</span>
+                        <span>Quiz Master</span>
+                    </div>
+                    <div class="badge">
+                        <span class="badge-icon">🌍</span>
+                        <span>Eco Warrior</span>
+                    </div>
+                    <div class="badge">
+                        <span class="badge-icon">📚</span>
+                        <span>Knowledge Seeker</span>
+                    </div>
+                    <div class="badge">
+                        <span class="badge-icon">🎯</span>
+                        <span>Challenge Champion</span>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: var(--space-8);">
+                    <button class="btn btn-secondary" onclick="logout()">Sign Out</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Application State
+        let currentUser = {
+            name: "",
+            email: "",
+            points: 1250,
+            level: 5,
+            badges: 8,
+            completedLessons: 12,
+            quizzesTaken: 15,
+            challengesCompleted: 3,
+            daysActive: 45
+        };
+
+        let currentQuiz = null;
+        let currentQuestionIndex = 0;
+        let quizScore = 0;
+        let isAnimating = false;
+        let isLoggedIn = false;
+
+        // Authentication System
+        const authModal = document.getElementById('authModal');
+        const authForm = document.getElementById('authForm');
+        const authTitle = document.getElementById('authTitle');
+        const authSubtitle = document.getElementById('authSubtitle');
+        const authSubmit = document.getElementById('authSubmit');
+        const authSwitchBtn = document.getElementById('authSwitchBtn');
+        const authSwitchText = document.getElementById('authSwitchText');
+        const nameGroup = document.getElementById('nameGroup');
+        const mainApp = document.getElementById('mainApp');
+
+        let isSignUp = false;
+
+        function toggleAuthMode() {
+            isSignUp = !isSignUp;
+            
+            if (isSignUp) {
+                authTitle.textContent = 'Create Account';
+                authSubtitle.textContent = 'Join EcoLearn and start your environmental journey';
+                authSubmit.textContent = 'Sign Up';
+                authSwitchText.innerHTML = 'Already have an account? <button type="button" id="authSwitchBtn">Sign in</button>';
+                nameGroup.style.display = 'block';
+            } else {
+                authTitle.textContent = 'Welcome Back';
+                authSubtitle.textContent = 'Sign in to continue your environmental journey';
+                authSubmit.textContent = 'Sign In';
+                authSwitchText.innerHTML = 'Don\'t have an account? <button type="button" id="authSwitchBtn">Sign up</button>';
+                nameGroup.style.display = 'none';
+            }
+            
+            // Re-attach event listener
+            document.getElementById('authSwitchBtn').addEventListener('click', toggleAuthMode);
+        }
+
+        authForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const name = document.getElementById('name').value;
+            
+            if (isSignUp && !name.trim()) {
+                showToast('Please enter your full name', 'error');
+                return;
+            }
+            
+            if (!email.trim() || !password.trim()) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+            
+            // Simulate authentication
+            currentUser.name = name || email.split('@')[0];
+            currentUser.email = email;
+            
+            // Store user data
+            localStorage.setItem('ecolearn_user', JSON.stringify(currentUser));
+            
+            // Show success and login
+            showToast(isSignUp ? 'Account created successfully!' : 'Welcome back!', 'success');
+            
+            setTimeout(() => {
+                login();
+            }, 1000);
+        });
+
+        authSwitchBtn.addEventListener('click', toggleAuthMode);
+
+        function login() {
+            isLoggedIn = true;
+            authModal.style.display = 'none';
+            mainApp.style.display = 'block';
+            
+            // Update UI with user data
+            updateUserInterface();
+            
+            // Show welcome message
+            setTimeout(() => {
+                showToast(`Welcome ${currentUser.name}! Ready to make an environmental impact?`, 'success');
+            }, 500);
+        }
+
+        function logout() {
+            isLoggedIn = false;
+            localStorage.removeItem('ecolearn_user');
+            authModal.style.display = 'flex';
+            mainApp.style.display = 'none';
+            
+            // Reset form
+            authForm.reset();
+            isSignUp = false;
+            toggleAuthMode();
+            
+            showToast('You have been signed out', 'success');
+        }
+
+        function updateUserInterface() {
+            document.getElementById('welcomeUser').textContent = `Welcome back, ${currentUser.name}!`;
+            document.getElementById('profileName').textContent = currentUser.name;
+            document.getElementById('currentUserName').textContent = currentUser.name;
+            document.getElementById('userPoints').textContent = currentUser.points.toLocaleString();
+            document.getElementById('leaderboardPoints').textContent = currentUser.points.toLocaleString();
+        }
+
+        // Check for existing user on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedUser = localStorage.getItem('ecolearn_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                login();
+            }
+        });
+
+        // Lesson Content Data
+        const lessonData = {
+            climate: {
+                title: "🌡️ Climate Change",
+                content: `
+                    <h3 style="color: var(--gray-900); font-family: 'Poppins', sans-serif; margin-bottom: var(--space-4);">Understanding Climate Change</h3>
+                    <p style="color: var(--gray-700); margin-bottom: var(--space-4); line-height: 1.6;">Climate change refers to long-term shifts in global temperatures and weather patterns. While climate variations are natural, human activities have been the main driver since the 1800s.</p>
+                    
+                    <h4 style="color: var(--gray-800); font-weight: 600; margin: var(--space-6) 0 var(--space-3);">Key Facts:</h4>
+                    <ul style="color: var(--gray-700); margin-bottom: var(--space-6); padding-left: var(--space-6);">
+                        <li style="margin-bottom: var(--space-2);">Global average temperature has risen by 1.1°C since pre-industrial times</li>
+                        <li style="margin-bottom: var(--space-2);">CO₂ levels are at their highest in 3 million years</li>
+                        <li style="margin-bottom: var(--space-2);">Sea levels are rising at 3.3mm per year</li>
+                        <li style="margin-bottom: var(--space-2);">Arctic sea ice is declining at 13% per decade</li>
+                    </ul>
+
+                    <div style="background: var(--gray-50); padding: var(--space-6); border-radius: var(--radius-lg); border-left: 4px solid var(--primary); margin: var(--space-6) 0;">
+                        <h4 style="color: var(--gray-800); font-weight: 600; margin-bottom: var(--space-4);">🎯 What You Can Do:</h4>
+                        <ul style="color: var(--gray-700); padding-left: var(--space-6);">
+                            <li style="margin-bottom: var(--space-2);">Use renewable energy sources</li>
+                            <li style="margin-bottom: var(--space-2);">Reduce, reuse, and recycle</li>
+                            <li style="margin-bottom: var(--space-2);">Choose sustainable transportation</li>
+                            <li style="margin-bottom: var(--space-2);">Support climate-friendly policies</li>
+                        </ul>
+                    </div>
+                `,
+                points: 50
+            },
+            water: {
+                title: "💧 Water Conservation",
+                content: `
+                    <h3 style="color: var(--gray-900); font-family: 'Poppins', sans-serif; margin-bottom: var(--space-4);">The Importance of Water Conservation</h3>
+                    <p style="color: var(--gray-700); margin-bottom: var(--space-4); line-height: 1.6;">Water is essential for all life on Earth. Despite covering 71% of our planet, only 2.5% is freshwater, and less than 1% is accessible for human use.</p>
+                    
+                    <h4 style="color: var(--gray-800); font-weight: 600; margin: var(--space-6) 0 var(--space-3);">Water Crisis Facts:</h4>
+                    <ul style="color: var(--gray-700); margin-bottom: var(--space-6); padding-left: var(--space-6);">
+                        <li style="margin-bottom: var(--space-2);">2 billion people lack access to safely managed drinking water</li>
+                        <li style="margin-bottom: var(--space-2);">Agriculture uses 70% of global freshwater</li>
+                        <li style="margin-bottom: var(--space-2);">Water demand is increasing by 1% per year</li>
+                        <li style="margin-bottom: var(--space-2);">Climate change is making water scarcity worse</li>
+                    </ul>
+
+                    <div style="background: var(--gray-50); padding: var(--space-6); border-radius: var(--radius-lg); border-left: 4px solid var(--secondary); margin: var(--space-6) 0;">
+                        <h4 style="color: var(--gray-800); font-weight: 600; margin-bottom: var(--space-4);">🎯 Conservation Tips:</h4>
+                        <ul style="color: var(--gray-700); padding-left: var(--space-6);">
+                            <li style="margin-bottom: var(--space-2);">Fix leaks immediately</li>
+                            <li style="margin-bottom: var(--space-2);">Take shorter showers</li>
+                            <li style="margin-bottom: var(--space-2);">Install water-efficient fixtures</li>
+                            <li style="margin-bottom: var(--space-2);">Collect rainwater for gardens</li>
+                        </ul>
+                    </div>
+                `,
+                points: 50
+            },
+            waste: {
+                title: "♻️ Waste Management",
+                content: `
+                    <h3 style="color: var(--gray-900); font-family: 'Poppins', sans-serif; margin-bottom: var(--space-4);">Sustainable Waste Management</h3>
+                    <p style="color: var(--gray-700); margin-bottom: var(--space-4); line-height: 1.6;">Proper waste management is crucial for environmental health. The average person generates 4.5 pounds of waste per day, much of which can be reduced, reused, or recycled.</p>
+                    
+                    <h4 style="color: var(--gray-800); font-weight: 600; margin: var(--space-6) 0 var(--space-3);">The 5 R's Hierarchy:</h4>
+                    <ul style="color: var(--gray-700); margin-bottom: var(--space-6); padding-left: var(--space-6);">
+                        <li style="margin-bottom: var(--space-2);"><strong>Refuse:</strong> Say no to unnecessary items</li>
+                        <li style="margin-bottom: var(--space-2);"><strong>Reduce:</strong> Minimize consumption</li>
+                        <li style="margin-bottom: var(--space-2);"><strong>Reuse:</strong> Find new purposes for items</li>
+                        <li style="margin-bottom: var(--space-2);"><strong>Recycle:</strong> Process materials into new products</li>
+                        <li style="margin-bottom: var(--space-2);"><strong>Rot:</strong> Compost organic waste</li>
+                    </ul>
+
+                    <div style="background: var(--gray-50); padding: var(--space-6); border-radius: var(--radius-lg); border-left: 4px solid var(--accent-orange); margin: var(--space-6) 0;">
+                        <h4 style="color: var(--gray-800); font-weight: 600; margin-bottom: var(--space-4);">🎯 Action Steps:</h4>
+                        <ul style="color: var(--gray-700); padding-left: var(--space-6);">
+                            <li style="margin-bottom: var(--space-2);">Separate recyclables from trash</li>
+                            <li style="margin-bottom: var(--space-2);">Start a compost bin</li>
+                            <li style="margin-bottom: var(--space-2);">Choose products with less packaging</li>
+                            <li style="margin-bottom: var(--space-2);">Donate items instead of throwing away</li>
+                        </ul>
+                    </div>
+                `,
+                points: 50
+            },
+            biodiversity: {
+                title: "🦎 Biodiversity",
+                content: `
+                    <h3 style="color: var(--gray-900); font-family: 'Poppins', sans-serif; margin-bottom: var(--space-4);">Protecting Earth's Biodiversity</h3>
+                    <p style="color: var(--gray-700); margin-bottom: var(--space-4); line-height: 1.6;">Biodiversity refers to the variety of life on Earth - from genes to species to ecosystems. It's essential for ecosystem stability and human well-being.</p>
+                    
+                    <h4 style="color: var(--gray-800); font-weight: 600; margin: var(--space-6) 0 var(--space-3);">Biodiversity Facts:</h4>
+                    <ul style="color: var(--gray-700); margin-bottom: var(--space-6); padding-left: var(--space-6);">
+                        <li style="margin-bottom: var(--space-2);">Earth hosts 8.7 million species (estimated)</li>
+                        <li style="margin-bottom: var(--space-2);">Species are going extinct 1,000-10,000 times faster than natural rate</li>
+                        <li style="margin-bottom: var(--space-2);">25% of plant and animal species face extinction by 2050</li>
+                        <li style="margin-bottom: var(--space-2);">Ecosystems provide $125 trillion in services annually</li>
+                    </ul>
+
+                    <div style="background: var(--gray-50); padding: var(--space-6); border-radius: var(--radius-lg); border-left: 4px solid var(--accent-pink); margin: var(--space-6) 0;">
+                        <h4 style="color: var(--gray-800); font-weight: 600; margin-bottom: var(--space-4);">🎯 How to Help:</h4>
+                        <ul style="color: var(--gray-700); padding-left: var(--space-6);">
+                            <li style="margin-bottom: var(--space-2);">Plant native species in your garden</li>
+                            <li style="margin-bottom: var(--space-2);">Support sustainable products</li>
+                            <li style="margin-bottom: var(--space-2);">Reduce pesticide use</li>
+                            <li style="margin-bottom: var(--space-2);">Participate in citizen science projects</li>
+                        </ul>
+                    </div>
+                `,
+                points: 50
+            }
+        };
+
+        // Quiz Questions Data
+        const quizData = {
+            climate: [
+                {
+                    question: "What is the main cause of current climate change?",
+                    options: ["Natural variations", "Solar activity", "Human activities", "Volcanic eruptions"],
+                    correct: 2,
+                    explanation: "Human activities, particularly burning fossil fuels, are the main driver of current climate change."
+                },
+                {
+                    question: "By how much has global average temperature risen since pre-industrial times?",
+                    options: ["0.5°C", "1.1°C", "1.8°C", "2.3°C"],
+                    correct: 1,
+                    explanation: "Global average temperature has risen by approximately 1.1°C since pre-industrial times."
+                },
+                {
+                    question: "What percentage is Arctic sea ice declining per decade?",
+                    options: ["8%", "10%", "13%", "16%"],
+                    correct: 2,
+                    explanation: "Arctic sea ice is declining at a rate of 13% per decade due to global warming."
+                }
+            ],
+            water: [
+                {
+                    question: "What percentage of Earth's water is accessible freshwater for human use?",
+                    options: ["Less than 1%", "2.5%", "5%", "10%"],
+                    correct: 0,
+                    explanation: "Less than 1% of Earth's water is accessible freshwater for human use."
+                },
+                {
+                    question: "How much of global freshwater does agriculture use?",
+                    options: ["50%", "60%", "70%", "80%"],
+                    correct: 2,
+                    explanation: "Agriculture uses approximately 70% of global freshwater resources."
+                },
+                {
+                    question: "How many people lack access to safely managed drinking water?",
+                    options: ["1 billion", "2 billion", "3 billion", "4 billion"],
+                    correct: 1,
+                    explanation: "About 2 billion people worldwide lack access to safely managed drinking water."
+                }
+            ],
+            waste: [
+                {
+                    question: "How much waste does the average person generate per day?",
+                    options: ["2.5 pounds", "3.5 pounds", "4.5 pounds", "5.5 pounds"],
+                    correct: 2,
+                    explanation: "The average person generates about 4.5 pounds of waste per day."
+                },
+                {
+                    question: "What is the first step in the 5 R's hierarchy?",
+                    options: ["Reduce", "Reuse", "Refuse", "Recycle"],
+                    correct: 2,
+                    explanation: "Refuse is the first step - saying no to unnecessary items prevents waste from being created."
+                },
+                {
+                    question: "What does 'Rot' mean in the 5 R's?",
+                    options: ["Throw away", "Burn waste", "Compost organic waste", "Bury waste"],
+                    correct: 2,
+                    explanation: "Rot refers to composting organic waste to create nutrient-rich soil."
+                }
+            ],
+            biodiversity: [
+                {
+                    question: "Approximately how many species are estimated to exist on Earth?",
+                    options: ["5.7 million", "8.7 million", "12.7 million", "15.7 million"],
+                    correct: 1,
+                    explanation: "Scientists estimate there are approximately 8.7 million species on Earth."
+                },
+                {
+                    question: "How much faster are species going extinct compared to the natural rate?",
+                    options: ["100-500 times", "500-1,000 times", "1,000-10,000 times", "10,000-50,000 times"],
+                    correct: 2,
+                    explanation: "Species are going extinct 1,000-10,000 times faster than the natural background rate."
+                },
+                {
+                    question: "What percentage of plant and animal species face extinction by 2050?",
+                    options: ["15%", "20%", "25%", "30%"],
+                    correct: 2,
+                    explanation: "Scientists estimate that 25% of plant and animal species face extinction by 2050."
+                }
+            ]
+        };
+
+        // Navigation Functions
+        function showSection(sectionId) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            const sections = document.querySelectorAll('.section');
+            const activeSection = document.querySelector('.section.active');
+            
+            if (activeSection) {
+                activeSection.style.opacity = '0';
+                activeSection.style.transform = 'translateY(20px)';
+            }
+
+            // Update nav buttons
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            setTimeout(() => {
+                sections.forEach(section => section.classList.remove('active'));
+                
+                const targetSection = document.getElementById(sectionId);
+                targetSection.classList.add('active');
+                targetSection.style.opacity = '0';
+                targetSection.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    targetSection.style.opacity = '1';
+                    targetSection.style.transform = 'translateY(0)';
+                    isAnimating = false;
+                }, 50);
+            }, 300);
+        }
+
+        // Lesson Functions
+        function openLesson(lessonType) {
+            const lesson = lessonData[lessonType];
+            document.getElementById('lesson-text').innerHTML = `
+                <h2 style="color: var(--gray-900); font-family: 'Poppins', sans-serif; font-size: 1.75rem; font-weight: 700; margin-bottom: var(--space-6);">${lesson.title}</h2>
+                ${lesson.content}
+                <div style="margin-top: var(--space-8); text-align: center;">
+                    <button class="btn btn-primary" onclick="completeLesson('${lessonType}')">
+                        Complete Lesson (+${lesson.points} points) ✨
+                    </button>
+                </div>
+            `;
+            
+            const lessonContent = document.getElementById('lesson-content');
+            lessonContent.style.display = 'block';
+            lessonContent.style.opacity = '0';
+            lessonContent.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                lessonContent.style.opacity = '1';
+                lessonContent.style.transform = 'translateY(0)';
+            }, 100);
+        }
+
+        function closeLessonContent() {
+            const lessonContent = document.getElementById('lesson-content');
+            lessonContent.style.opacity = '0';
+            lessonContent.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                lessonContent.style.display = 'none';
+            }, 300);
+        }
+
+        function completeLesson(lessonType) {
+            const points = lessonData[lessonType].points;
+            currentUser.points += points;
+            currentUser.completedLessons++;
+            
+            showToast(`🎉 Lesson completed! You earned ${points} eco-points!`, 'success');
+            createConfetti();
+            updateUserStats();
+            closeLessonContent();
+        }
+
+        // Quiz Functions
+        function startQuiz(topic) {
+            currentQuiz = quizData[topic];
+            currentQuestionIndex = 0;
+            quizScore = 0;
+            
+            const quizArea = document.getElementById('quiz-area');
+            quizArea.style.display = 'block';
+            quizArea.style.opacity = '0';
+            quizArea.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                quizArea.style.opacity = '1';
+                quizArea.style.transform = 'translateY(0)';
+                showQuestion();
+            }, 100);
+        }
+
+        function showQuestion() {
+            if (currentQuestionIndex >= currentQuiz.length) {
+                showQuizResults();
+                return;
+            }
+
+            const question = currentQuiz[currentQuestionIndex];
+            const progressPercent = ((currentQuestionIndex + 1) / currentQuiz.length) * 100;
+            
+            document.getElementById('quiz-progress').innerHTML = `
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${progressPercent}%;"></div>
+                </div>
+                <p style="color: var(--gray-700); text-align: center; font-weight: 600; margin-top: var(--space-2);">Question ${currentQuestionIndex + 1} of ${currentQuiz.length}</p>
+            `;
+            
+            document.getElementById('quiz-question-container').innerHTML = `
+                <div class="quiz-question">${question.question}</div>
+                <div class="quiz-options">
+                    ${question.options.map((option, index) => 
+                        `<div class="quiz-option" onclick="selectAnswer(${index})" tabindex="0" role="button">${option}</div>`
+                    ).join('')}
+                </div>
+                <div id="quiz-feedback"></div>
+            `;
+            
+            document.getElementById('next-question').style.display = 'none';
+        }
+
+        function selectAnswer(selectedIndex) {
+            const question = currentQuiz[currentQuestionIndex];
+            const options = document.querySelectorAll('.quiz-option');
+            const feedback = document.getElementById('quiz-feedback');
+            
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+                option.style.cursor = 'default';
+            });
+            
+            setTimeout(() => {
+                options[selectedIndex].classList.add(selectedIndex === question.correct ? 'correct' : 'incorrect');
+                if (selectedIndex !== question.correct) {
+                    options[question.correct].classList.add('correct');
+                }
+            }, 200);
+            
+            const isCorrect = selectedIndex === question.correct;
+            if (isCorrect) {
+                quizScore++;
+                feedback.innerHTML = `<div class="quiz-feedback correct" style="opacity: 0; transform: translateY(10px);">
+                    ✅ Correct! ${question.explanation}
+                </div>`;
+                createMiniConfetti();
+            } else {
+                feedback.innerHTML = `<div class="quiz-feedback incorrect" style="opacity: 0; transform: translateY(10px);">
+                    ❌ Incorrect. ${question.explanation}
+                </div>`;
+            }
+            
+            setTimeout(() => {
+                const feedbackEl = feedback.querySelector('.quiz-feedback');
+                if (feedbackEl) {
+                    feedbackEl.style.opacity = '1';
+                    feedbackEl.style.transform = 'translateY(0)';
+                }
+                document.getElementById('next-question').style.display = 'inline-block';
+            }, 500);
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            const container = document.getElementById('quiz-question-container');
+            container.style.opacity = '0';
+            container.style.transform = 'translateX(30px)';
+            
+            setTimeout(() => {
+                showQuestion();
+                container.style.opacity = '1';
+                container.style.transform = 'translateX(0)';
+            }, 300);
+        }
+
+        function showQuizResults() {
+            const percentage = Math.round((quizScore / currentQuiz.length) * 100);
+            const points = quizScore * 10;
+            currentUser.points += points;
+            currentUser.quizzesTaken++;
+            
+            document.getElementById('quiz-question-container').innerHTML = `
+                <div style="text-align: center; padding: var(--space-12);">
+                    <h2 style="color: var(--gray-900); font-family: 'Poppins', sans-serif; font-size: 2rem; margin-bottom: var(--space-8);">🎉 Quiz Completed!</h2>
+                    <div style="display: flex; justify-content: center; gap: var(--space-6); flex-wrap: wrap; margin-bottom: var(--space-8);">
+                        <div class="stat-card" style="min-width: 150px;">
+                            <div class="stat-number">${quizScore}/${currentQuiz.length}</div>
+                            <div class="stat-label">Correct Answers</div>
+                        </div>
+                        <div class="stat-card" style="min-width: 150px;">
+                            <div class="stat-number">${percentage}%</div>
+                            <div class="stat-label">Score</div>
+                        </div>
+                        <div class="stat-card" style="min-width: 150px;">
+                            <div class="stat-number">+${points}</div>
+                            <div class="stat-label">Eco Points</div>
+                        </div>
+                    </div>
+                    <p style="color: var(--gray-700); font-size: 1.125rem; font-weight: 500;">
+                        ${percentage >= 80 ? '🏆 Excellent work! You\'re an environmental champion!' : 
+                          percentage >= 60 ? '👍 Good job! Keep learning about the environment!' : 
+                          '📚 Keep studying! Every expert was once a beginner!'}
+                    </p>
+                </div>
+            `;
+            
+            document.getElementById('quiz-progress').innerHTML = '';
+            document.getElementById('next-question').style.display = 'none';
+            
+            if (percentage >= 80) {
+                createConfetti();
+            }
+            
+            updateUserStats();
+            showToast(`Quiz completed! +${points} eco-points earned!`, 'success');
+        }
+
+        function closeQuiz() {
+            const quizArea = document.getElementById('quiz-area');
+            quizArea.style.opacity = '0';
+            quizArea.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                quizArea.style.display = 'none';
+            }, 300);
+        }
+
+        // Challenge Functions
+        function submitChallenge(challengeType) {
+            const points = 200;
+            currentUser.points += points;
+            currentUser.challengesCompleted++;
+            
+            showToast(`🎉 Challenge submitted! You earned ${points} eco-points!`, 'success');
+            createConfetti();
+            updateUserStats();
+            
+            // Update challenge status (simplified)
+            event.target.closest('.challenge-card').querySelector('.challenge-status').textContent = 'Under Review';
+            event.target.closest('.challenge-card').querySelector('.challenge-status').className = 'challenge-status pending';
+        }
+
+        // Leaderboard Functions
+        function filterLeaderboard(type) {
+            const buttons = document.querySelectorAll('.leaderboard-filters .btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const table = document.querySelector('.leaderboard-table tbody');
+            table.style.opacity = '0.5';
+            table.style.transform = 'scale(0.98)';
+            
+            setTimeout(() => {
+                table.style.opacity = '1';
+                table.style.transform = 'scale(1)';
+                showToast(`Showing ${type === 'all' ? 'all students' : type === 'school' ? 'school rankings' : 'class rankings'}`, 'success');
+            }, 300);
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        // Confetti Animation System
+        function createConfetti() {
+            const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * window.innerWidth + 'px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        if (confetti.parentNode) {
+                            confetti.parentNode.removeChild(confetti);
+                        }
+                    }, 4000);
+                }, i * 20);
+            }
+        }
+
+        function createMiniConfetti() {
+            const colors = ['#10b981', '#f59e0b'];
+            
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.style.position = 'fixed';
+                    confetti.style.left = Math.random() * 200 + (window.innerWidth / 2 - 100) + 'px';
+                    confetti.style.top = '200px';
+                    confetti.style.width = '6px';
+                    confetti.style.height = '6px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.borderRadius = '50%';
+                    confetti.style.pointerEvents = 'none';
+                    confetti.style.zIndex = '10000';
+                    confetti.style.animation = 'miniConfetti 1s ease-out forwards';
+                    
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        if (confetti.parentNode) {
+                            confetti.parentNode.removeChild(confetti);
+                        }
+                    }, 1000);
+                }, i * 50);
+            }
+        }
+
+        // Add mini confetti animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes miniConfetti {
+                0% { 
+                    transform: translateY(0) scale(1); 
+                    opacity: 1; 
+                }
+                50% { 
+                    transform: translateY(-50px) scale(1.2); 
+                    opacity: 1; 
+                }
+                100% { 
+                    transform: translateY(100px) scale(0.5); 
+                    opacity: 0; 
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // User Stats Update
+        function updateUserStats() {
+            document.getElementById('userPoints').textContent = currentUser.points.toLocaleString();
+            document.getElementById('leaderboardPoints').textContent = currentUser.points.toLocaleString();
+            
+            const newLevel = Math.floor(currentUser.points / 200) + 1;
+            if (newLevel !== currentUser.level) {
+                currentUser.level = newLevel;
+                showToast(`🎉 Level Up! You're now Level ${newLevel}!`, 'success');
+                createConfetti();
+            }
+            
+            // Save updated user data
+            if (isLoggedIn) {
+                localStorage.setItem('ecolearn_user', JSON.stringify(currentUser));
+            }
+        }
+
+        // Keyboard Navigation Support
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (document.getElementById('lesson-content').style.display !== 'none') {
+                    closeLessonContent();
+                }
+                if (document.getElementById('quiz-area').style.display !== 'none') {
+                    closeQuiz();
+                }
+            }
+            
+            if (e.key === 'Enter' || e.key === ' ') {
+                const focusedElement = document.activeElement;
+                if (focusedElement.classList.contains('lesson-card') || 
+                    focusedElement.classList.contains('quiz-option')) {
+                    focusedElement.click();
+                }
+            }
+        });
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🌱 EcoLearn loaded successfully!');
+            
+            // Show initial welcome message after delay
+            setTimeout(() => {
+                if (!isLoggedIn) {
+                    showToast('Welcome to EcoLearn! Sign in to start your environmental journey! 🌱', 'success');
+                }
+            }, 2000);
+        });
+
+        // Handle window resize for responsive design
+        window.addEventListener('resize', () => {
+            // Adjust confetti positions if needed
+            const confettiElements = document.querySelectorAll('.confetti');
+            confettiElements.forEach(confetti => {
+                if (parseInt(confetti.style.left) > window.innerWidth) {
+                    confetti.style.left = Math.random() * window.innerWidth + 'px';
+                }
+            });
+        });
+
+        // Error handling
+        window.addEventListener('error', (e) => {
+            console.error('App error:', e.error);
+            showToast('Something went wrong. Please try again.', 'error');
+        });
+    </script>
+</body>
+</html>
