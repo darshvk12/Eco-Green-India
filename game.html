@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Carbon Runner — Demo</title>
+  <style>
+    html,body { height:100%; margin:0; background: linear-gradient(#87ceeb, #bde0fe); font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+    #game-container { width:100%; height:100vh; display:flex; align-items:center; justify-content:center; }
+    .instructions { position: absolute; top:12px; left:12px; padding:10px 12px; background: rgba(255,255,255,0.85); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+    .instructions p { margin:0; font-size:13px; }
+    .attribution { position: absolute; bottom:8px; left:8px; font-size:12px; color:#111; opacity:0.6 }
+  </style>
+  <!-- Phaser 3 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+</head>
+<body>
+  <div id="game-container"></div>
+  <div class="instructions">
+    <p><strong>Carbon Runner</strong> — Arrow keys to move. Collect green items, avoid polluting obstacles.</p>
+    <p>Goal: get a high score. Game time/speed increases over time.</p>
+  </div>
+  <div class="attribution">Demo by your Carbon Runner team — open <code>game.html</code> to run.</div>
+
+  <script>
+  const GAME_WIDTH = 900;
+  const GAME_HEIGHT = 520;
+
+  const config = {
+    type: Phaser.AUTO,
+    width: GAME_WIDTH,
+    height: GAME_HEIGHT,
+    parent: 'game-container',
+    backgroundColor: '#cfeefc',
+    physics: {
+      default: 'arcade',
+      arcade: { debug: false }
+    },
+    scene: {
+      preload: preload,
+      create: create,
+      update: update
+    }
+  };
+
+  const game = new Phaser.Game(config);
+
+  let player, cursors;
+  let obstacles, collectibles, powerups;
+  let score = 0;
+  let distance = 0;
+  let scoreText, distanceText, ecoText;
+  let speed = 200;
+  let spawnTimer = 0, collectibleTimer = 0, powerupTimer = 0;
+  let isGameOver = false;
+  let lives = 3;
+
+  function preload() {
+    this.load.image('player', 'assets/player.png');
+    this.load.image('obstacle', 'assets/obstacle.png');
+    this.load.image('powerup', 'assets/powerup.png');
+    this.load.image('tree', 'assets/tree.png');
+    this.load.image('bike', 'assets/bike.png');
+    this.load.image('recycle', 'assets/recycle.png');
+  }
+
+  function create() {
+    // Player
+    player = this.physics.add.sprite(120, GAME_HEIGHT / 2, 'player');
+    player.setDisplaySize(36, 48);
+    player.setCollideWorldBounds(true);
+
+    // Groups
+    obstacles = this.physics.add.group();
+    collectibles = this.physics.add.group();
+    powerups = this.physics.add.group();
+
+    // Input
+    cursors = this.input.keyboard.createCursorKeys();
+
+    // UI
+    scoreText = this.add.text(14, 12, 'Eco Points: 0', { fontSize: '18px', color:'#003300', fontFamily:'Inter' });
+    distanceText = this.add.text(14, 36, 'Distance: 0 m', { fontSize: '14px', color:'#003300', fontFamily:'Inter' });
+    ecoText = this.add.text(14, 56, 'Carbon Saved: 0 kg', { fontSize: '14px', color:'#003300', fontFamily:'Inter' });
+
+    // Collisions
+    this.physics.add.overlap(player, collectibles, collectItem, null, this);
+    this.physics.add.overlap(player, powerups, pickupPowerup, null, this);
+    this.physics.add.overlap(player, obstacles, hitObstacle, null, this);
+
+    spawnInitial(this);
+
+    // Tap/click for mobile
+    this.input.on('pointerdown', function(pointer) {
+      if (pointer.y < player.y) player.setVelocityY(-250);
+      else player.setVelocityY(250);
+    });
+
+    // Pause / resume with P
+    this.input.keyboard.on('keydown-P', () => {
+      if (this.scene.isPaused()) this.scene.resume(); else this.scene.pause();
+    });
+  }
+
+  function update(time, delta) {
+    if (isGameOver) return;
+    const dt = delta/1000;
+
+    // Player vertical control
+    player.setVelocityY(0);
+    if (cursors.up.isDown) player.setVelocityY(-260);
+    else if (cursors.down.isDown) player.setVelocityY(260);
+
+    // Move groups left
+    Phaser.Actions.IncX(obstacles.getChildren(), -speed*dt);
+    Phaser.Actions.IncX(collectibles.getChildren(), -speed*dt);
+    Phaser.Actions.IncX(powerups.getChildren(), -speed*dt);
+
+    // Remove off-screen
+    obstacles.getChildren().forEach(obj => { if (obj.x + obj.displayWidth < -50) obj.destroy(); });
+    collectibles.getChildren().forEach(obj => { if (obj.x + obj.displayWidth < -50) obj.destroy(); });
+    powerups.getChildren().forEach(obj => { if (obj.x + obj.displayWidth < -50) obj.destroy(); });
+
+    // Spawn logic
+    spawnTimer += delta; collectibleTimer += delta; powerupTimer += delta;
+    const obstacleInterval = Math.max(500, 900 - speed);
+    if (spawnTimer > obstacleInterval) { spawnObstacle(this); spawnTimer=0; }
+    if (collectibleTimer > 1100) { spawnCollectible(this); collectibleTimer=0; }
+    if (powerupTimer > 8000 + Math.random()*8000) { spawnPowerup(this); powerupTimer=0; }
+
+    // Increase difficulty
+    speed += 2*dt;
+
+    // Update score/distance/CO2
+    distance += (speed*dt)/100;
+    scoreText.setText('Eco Points: ' + Math.floor(score));
+    distanceText.setText('Distance: ' + Math.floor(distance) + ' m');
+    const co2 = Math.max(0, ((score*0.03)+(distance*0.01))).toFixed(2);
+    ecoText.setText('Carbon Saved: ' + co2 + ' kg');
+
+    if (lives <= 0) endGame(this);
+  }
+
+  function spawnInitial(scene) {
+    for (let i=0;i<5;i++) spawnCollectible(scene, 300 + i*140 + Math.random()*80);
+    for (let i=0;i<3;i++) spawnObstacle(scene, 500 + i*260 + Math.random()*120);
+  }
+
+  function spawnObstacle(scene, xPos=null) {
+    const x = xPos || (GAME_WIDTH + 60);
+    const y = Phaser.Math.Between(60, GAME_HEIGHT - 120);
+    const obs = scene.physics.add.sprite(x, y, 'obstacle');
+    obs.setDisplaySize(48,48);
+    obs.body.setImmovable(true);
+    obstacles.add(obs);
+  }
+
+  function spawnCollectible(scene, xPos=null) {
+    const x = xPos || (GAME_WIDTH + 40 + Math.random()*200);
+    const y = Phaser.Math.Between(80, GAME_HEIGHT - 140);
+    const types = ['tree','bike','recycle'];
+    const t = Phaser.Utils.Array.GetRandom(types);
+    const item = scene.physics.add.sprite(x, y, t);
+    item.setDisplaySize(36,36);
+    item.type = t;
+    collectibles.add(item);
+  }
+
+  function spawnPowerup(scene) {
+    const x = GAME_WIDTH + 60;
+    const y = Phaser.Math.Between(100, GAME_HEIGHT - 140);
+    const p = scene.physics.add.sprite(x, y, 'powerup');
+    p.setDisplaySize(36,36);
+    p.isShield = true;
+    powerups.add(p);
+  }
+
+  function collectItem(playerObj, item) {
+    let add = 10;
+    if (item.type==='tree') add=18;
+    else if (item.type==='bike') add=14;
+    else if (item.type==='recycle') add=10;
+    score += add;
+    this.tweens.add({ targets:item, scale:0.1, alpha:0.8, duration:120, yoyo:true, onComplete: ()=> item.destroy() });
+  }
+
+  function pickupPowerup(playerObj, p) {
+    p.destroy();
+    const shield = this.add.circle(player.x, player.y, 46, 0x00d1ff, 0.25);
+    shield.setDepth(20);
+    this.tweens.add({ targets: shield, alpha:0.2, duration:8000, onComplete: ()=> shield.destroy() });
+    player.isShielded = true;
+    this.time.delayedCall(8000, ()=>{ player.isShielded=false; });
+  }
+
+  function hitObstacle(playerObj, obs) {
+    if (player.isShielded) { player.isShielded=false; obs.destroy(); score+=6; return; }
+    score = Math.max(0, score-8);
+    lives -=1;
+    this.tweens.add({ targets: player, alpha:0.3, duration:120, yoyo:true, repeat:2, onComplete: ()=> player.setAlpha(1) });
+    this.cameras.main.shake(120,0.01);
+    obs.destroy();
+  }
+
+  function endGame(scene) {
+    isGameOver=true;
+    obstacles.getChildren().forEach(o=>{if(o.body)o.body.moves=false;});
+    collectibles.getChildren().forEach(c=>{if(c.body)c.body.moves=false;});
+    powerups.getChildren().forEach(p=>{if(p.body)p.body.moves=false;});
+
+    const overlay = scene.add.rectangle(GAME_WIDTH/2,GAME_HEIGHT/2,GAME_WIDTH-120,GAME_HEIGHT-160,0xffffff).setStrokeStyle(4,0x00aa44).setOrigin(0.5);
+    const finalScore=Math.floor(score);
+    const finalDist=Math.floor(distance);
+    const co2 = Math.max(0,((finalScore*0.03)+(finalDist*0.01))).toFixed(2);
+
+    scene.add.text(GAME_WIDTH/2,GAME_HEIGHT/2-60,'Run Complete!',{ fontSize:'32px', color:'#003300', fontFamily:'Inter' }).setOrigin(0.5);
+    const lines = [`Eco Points: ${finalScore}`,`Distance: ${finalDist} m`,`Estimated Carbon Saved: ${co2} kg`];
+    for(let i=0;i<lines.length;i++) scene.add.text(GAME_WIDTH/2,GAME_HEIGHT/2-12+34*(i+1),lines[i],{fontSize:'18px', color:'#0a3b2b', fontFamily:'Inter'}).setOrigin(0.5);
+
+    let rank='Eco Learner';
+    if(finalScore>150) rank='Eco Runner';
+    if(finalScore>320) rank='Carbon Crusher';
+    scene.add.text(GAME_WIDTH/2,GAME_HEIGHT/2+120,`Badge: ${rank}`,{fontSize:'20px', color:'#006633', fontFamily:'Inter'}).setOrigin(0.5);
+
+    const btn = scene.add.rectangle(GAME_WIDTH/2,GAME_HEIGHT/2+170,160,40,0x00a85a).setOrigin(0.5).setInteractive({useHandCursor:true});
+    const btnText = scene.add.text(GAME_WIDTH/2,GAME_HEIGHT/2+170,'Play Again',{fontSize:'16px', color:'#ffffff'}).setOrigin(0.5);
+    btn.on('pointerdown', ()=>{ window.location.reload(); });
+  }
+
+  </script>
+</body>
+</html>
