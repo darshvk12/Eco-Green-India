@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Plant a Tree — Full Interactive Game</title>
+  <meta name="description" content="Interactive planting game with animations, particles, sound, persistence and step-by-step guidance." />
+  <style>
+    
+    :root{
+      --bg-top: #dff7e9; --bg-bottom:#b6e7c6;
+      --panel:#ffffff; --accent: #2f855a; --muted:#6b7280; --gold:#f6c85f;
+      --ui-radius:16px; --card-radius:18px; --game-width:420px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial}
+    body{display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,var(--bg-top),var(--bg-bottom));padding:18px}
+
+    .app{width:100%;max-width:var(--game-width);background:linear-gradient(180deg,#ffffff,#f7fff8);border-radius:20px;box-shadow:0 18px 40px rgba(18,40,20,0.08);overflow:hidden}
+    header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px}
+    h1{font-size:18px;margin:0;color:#0c3d2b}
+    .meta{font-size:13px;color:var(--muted)}
+
+    .main{display:flex;flex-direction:column;padding:12px}
+    .stage{display:flex;gap:12px;align-items:flex-start}
+    .portrait{width:68px;height:68px;border-radius:12px;background:linear-gradient(135deg,#fff,#f0fff4);display:flex;align-items:center;justify-content:center;flex:0 0 68px;border:2px solid #e6f6ee}
+    .bubble{flex:1;background:var(--panel);border-radius:12px;padding:12px;box-shadow:0 8px 20px rgba(10,30,10,0.03)}
+    .bubble p{margin:0;font-weight:700;color:#123924}
+    .bubble small{display:block;color:var(--muted);margin-top:8px}
+
+    /* game canvas area */
+    .game-wrap{position:relative;margin-top:12px;background:linear-gradient(180deg,#bfeccf 0%, #94dba3 100%);height:520px;border-radius:16px;padding:12px;border:6px solid rgba(255,255,255,0.7);overflow:hidden}
+
+    /* horizon & ground */
+    .sky{position:absolute;inset:0;background:linear-gradient(180deg,#a8ecff 0%, rgba(255,255,255,0.0) 35%);pointer-events:none}
+    .ground{position:absolute;left:0;right:0;bottom:0;height:45%;background:linear-gradient(180deg,#5d4037,#3e2f20);border-top-left-radius:50% 18%;border-top-right-radius:50% 18%}
+
+    /* hole */
+    .hole{position:absolute;width:160px;height:90px;left:50%;bottom:24%;margin-left:-80px;border-radius:60% 60% 40% 40% / 70% 70% 40% 40%;background:linear-gradient(180deg,rgba(0,0,0,0.22),rgba(0,0,0,0.45));transform:translateY(16px) scale(0.9);opacity:0;transition:all 360ms cubic-bezier(.2,.9,.2,1)}
+
+    /* seedling */
+    .seedling{position:absolute;left:50%;bottom:31%;transform:translateX(-50%) translateY(6px) scale(0.9);opacity:0;transition:all 420ms cubic-bezier(.2,.85,.2,1)}
+
+    /* tools */
+    .toolbox{position:absolute;left:12px;top:12px;display:flex;flex-direction:column;gap:8px}
+    .tool{background:rgba(255,255,255,0.95);border-radius:12px;padding:10px;min-width:70px;display:flex;gap:8px;align-items:center;box-shadow:0 8px 20px rgba(0,0,0,0.06);cursor:pointer}
+    .tool img{width:34px;height:34px}
+    .tool strong{font-size:12px;color:#0b4f34}
+
+    /* water jar */
+    .water-jar{position:absolute;right:12px;top:12px;width:66px;height:66px;border-radius:12px;background:linear-gradient(180deg,#e6f7ff,#fff);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(10,60,90,0.06);cursor:pointer}
+
+    /* UI controls */
+    .controls{display:flex;gap:8px;justify-content:center;margin-top:12px}
+    .btn{background:var(--accent);border:none;color:white;padding:10px 14px;border-radius:12px;font-weight:800;box-shadow:0 8px 20px rgba(25,90,50,0.12);cursor:pointer}
+    .btn.secondary{background:var(--gold);color:#1f2937}
+
+    /* overlay badge */
+    .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+    .badge{background:linear-gradient(90deg,#fff8e1,#fff);padding:20px;border-radius:12px;box-shadow:0 12px 34px rgba(10,30,10,0.12);opacity:0;transform:translateY(12px) scale(0.96);transition:all 260ms}
+    .overlay.show .badge{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+
+    /* confetti canvas sits on top */
+    canvas.confetti{position:absolute;inset:0;pointer-events:none}
+
+    /* particles layer */
+    .particles{position:absolute;inset:0;pointer-events:none}
+
+    /* hint bubble for mobile */
+    .hint{position:absolute;left:50%;transform:translateX(-50%);bottom:8px;background:rgba(255,255,255,0.95);padding:8px 12px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.08);display:flex;gap:8px;align-items:center}
+
+    /* little decorative tree that grows */
+    .grown-tree{position:absolute;left:50%;bottom:28%;transform:translateX(-50%) scale(0.6);opacity:0;transition:all 700ms cubic-bezier(.2,.8,.2,1)}
+
+    /* responsive tweaks */
+    @media (max-width:420px){ .game-wrap{height:460px} }
+
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Plant a Tree Game">
+    <header>
+      <div>
+        <h1>Plant a Tree 🌱</h1>
+        <div class="meta">Interactive tutorial — drag, tap and hold to learn</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;color:var(--muted)">Score <strong id="score">0</strong></div>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="stage">
+        <div class="portrait" aria-hidden="true">
+          <!-- friendly face -->
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" fill="#fff" stroke="#e6fff3" stroke-width="1.5"/>
+            <circle cx="9.2" cy="9.3" r="0.9" fill="#063"/>
+            <circle cx="14.8" cy="9.3" r="0.9" fill="#063"/>
+            <path d="M8 13c1 1 3 1 4 0" stroke="#2f855a" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="bubble" role="status" aria-live="polite">
+          <p id="dialog">Hello! I'm Sprout. Tap Next to start. I'll guide you step-by-step.</p>
+          <small id="sub">Tip: use touch on mobile. You can restart anytime.</small>
+        </div>
+      </section>
+
+      <div class="game-wrap" id="gameWrap">
+        <div class="sky" aria-hidden="true"></div>
+
+        <div class="toolbox" id="tools">
+          <div class="tool" id="toolShovel" draggable="false" data-tool="shovel" aria-grabbed="false">
+            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'><path fill='%23333333' d='M19.4 3.6l-1-1a2 2 0 0 0-2.8 0L9 8.2l-4 4L3 14v3h3l1-2 4-4 6.6-6.6a2 2 0 0 0 0-2.8z'></path></svg>" alt="Shovel"></img>
+            <strong>Shovel</strong>
+          </div>
+          <div class="tool" id="toolSeed" draggable="false" data-tool="seed">
+            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23063' d='M12 2C9 2 3 6 3 10s8 12 9 12 9-8 9-12-6-8-9-8z'/></svg>" alt="Seedling"></img>
+            <strong>Seedling</strong>
+          </div>
+          <div class="tool" id="toolSoil" draggable="false" data-tool="soil">
+            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='8' fill='%23654' /></svg>" alt="Soil"></img>
+            <strong>Soil</strong>
+          </div>
+        </div>
+
+        <div class="water-jar" id="waterJar" title="Hold to pour water" role="button" aria-pressed="false">💧</div>
+
+        <div class="hole" id="hole"></div>
+
+        <div class="seedling" id="seedling">
+          <!-- seedling SVG -->
+          <svg viewBox="0 0 100 160" width="90" height="140" aria-hidden="true">
+            <g transform="translate(50,110)">
+              <rect x="-7" y="0" width="14" height="42" rx="6" fill="#8b5a2b"></rect>
+              <path d="M0 -2 C -20 -10 -30 -30 -8 -48 C -2 -52 2 -48 8 -52 C 30 -30 20 -10 0 -2Z" fill="#2f855a"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="grown-tree" id="grownTree">
+          <svg viewBox="0 0 200 260" width="160" height="220" aria-hidden="true">
+            <g transform="translate(100,200)">
+              <rect x="-12" y="0" width="24" height="72" rx="8" fill="#8b5a2b"></rect>
+              <circle cx="-36" cy="-30" r="36" fill="#2f855a"></circle>
+              <circle cx="36" cy="-28" r="36" fill="#2f855a"></circle>
+              <circle cx="0" cy="-64" r="48" fill="#2f855a"></circle>
+            </g>
+          </svg>
+        </div>
+
+        <div class="particles" id="particlesLayer"></div>
+        <canvas class="confetti" id="confettiCanvas"></canvas>
+
+        <div class="hint" id="hint" aria-hidden="true">Drag the <strong>shovel</strong> to the ground to dig a hole</div>
+
+        <div class="ground" aria-hidden="true"></div>
+
+        <div class="overlay" id="overlay"><div class="badge" id="badge"><h2 id="badgeText">Good job!</h2><p id="badgeSub">You completed the step.</p></div></div>
+      </div>
+
+      <div class="controls">
+        <button id="nextBtn" class="btn">Next ▶</button>
+        <button id="hintBtn" class="btn secondary">Hint</button>
+        <button id="restartBtn" class="btn" style="background:#ff6b6b">Restart</button>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    
+
+    
+    const dialog = document.getElementById('dialog');
+    const sub = document.getElementById('sub');
+    const toolShovel = document.getElementById('toolShovel');
+    const toolSeed = document.getElementById('toolSeed');
+    const toolSoil = document.getElementById('toolSoil');
+    const hole = document.getElementById('hole');
+    const seedling = document.getElementById('seedling');
+    const grownTree = document.getElementById('grownTree');
+    const waterJar = document.getElementById('waterJar');
+    const hint = document.getElementById('hint');
+    const nextBtn = document.getElementById('nextBtn');
+    const hintBtn = document.getElementById('hintBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const badge = document.getElementById('overlay');
+    const badgeText = document.getElementById('badgeText');
+    const badgeSub = document.getElementById('badgeSub');
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const particlesLayer = document.getElementById('particlesLayer');
+    const scoreEl = document.getElementById('score');
+    const gameWrap = document.getElementById('gameWrap');
+
+    // Steps and state (same concept as before)
+    const STEPS = [
+      {id:'dig', title:'Dig a Hole', desc:'Drag the shovel near the center of the ground to dig a hole.', action:'drag', tool:'shovel'},
+      {id:'place', title:'Place the Seedling', desc:'Drag the seedling into the hole gently.', action:'drag', tool:'seed'},
+      {id:'cover', title:'Cover the Roots', desc:'Tap the soil tool 3 times to cover the roots.', action:'tap', tool:'soil', required:3},
+      {id:'water', title:'Water the Plant', desc:'Hold the water jar for 1.6s to pour enough water.', action:'hold', tool:'water', duration:1600},
+      {id:'celebrate', title:'Celebration', desc:'Your tree has been planted. Nice work!', action:'none'}
+    ];
+
+    let current = 0;
+    let score = 0;
+    let soilTaps = 0;
+
+    // ---- WATER FIX VARIABLES ----
+    // waterActive: true while user is pressing/holding the water jar
+    // waterHoldStart: timestamp when continuous hold started (null when not holding)
+    // waterAccum: used to accumulate continuous hold time in case we implement partial resumes (we require continuous hold so we reset on release)
+    let waterActive = false;
+    let waterHoldStart = null;
+    let requiredWaterMs = STEPS.find(s=>s.id==='water').duration || 1600;
+    // We'll manage water particle emission inside the animation frame loop
+    // so it starts/stops immediately when waterActive changes.
+
+    // ---- Confetti canvas sizing ----
+    function resizeCanvas(){ confettiCanvas.width = gameWrap.clientWidth; confettiCanvas.height = gameWrap.clientHeight; }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // ---- Particle and visual helpers ----
+    function spawnSoilParticles(count=10, origin){
+      // origin: {x,y} in gameWrap coordinates
+      const layer = particlesLayer;
+      const w = gameWrap.clientWidth;
+      const h = gameWrap.clientHeight;
+      const originX = origin ? origin.x : w/2;
+      const originY = origin ? origin.y : h*0.66;
+      for(let i=0;i<count;i++){
+        const p = document.createElement('div');
+        p.style.position='absolute';
+        p.style.left = (originX + (Math.random()-0.5)*40) + 'px';
+        p.style.top = originY + 'px';
+        p.style.width = (6+Math.random()*6)+'px';
+        p.style.height = p.style.width;
+        p.style.background='#7b4f33';
+        p.style.borderRadius='50%';
+        p.style.opacity='0.95';
+        p.style.pointerEvents='none';
+        p.style.transform='translateY(0)';
+        layer.appendChild(p);
+        const vx = (Math.random()-0.5)*40;
+        const vy = - (50+Math.random()*80);
+        const dur = 700+Math.random()*700;
+        p.animate([{transform:'translate(0,0)', opacity:1},{transform:`translate(${vx}px,${vy}px)`, opacity:0}],
+                  {duration:dur,easing:'cubic-bezier(.2,.8,.2,1)'}).onfinish = ()=>p.remove();
+      }
+    }
+
+    function spawnLeafParticles(count=20){
+      const layer = particlesLayer;
+      const originX = gameWrap.clientWidth/2;
+      const originY = gameWrap.clientHeight*0.35;
+      for(let i=0;i<count;i++){
+        const e = document.createElement('div');
+        e.style.position='absolute';
+        e.style.left = originX + (Math.random()-0.5)*60 + 'px';
+        e.style.top = originY + 'px';
+        e.style.width = '8px';
+        e.style.height = '8px';
+        e.style.background = ['#6bd39a','#49b07a','#8bd3c7'][Math.floor(Math.random()*3)];
+        e.style.borderRadius='4px';
+        layer.appendChild(e);
+        const vx=(Math.random()-0.5)*80;
+        const vy=-(100+Math.random()*180);
+        e.animate([{transform:'translate(0,0)', opacity:1},{transform:`translate(${vx}px,${vy}px)`, opacity:0}],
+                  {duration:900+Math.random()*400,easing:'cubic-bezier(.2,.8,.2,1)'}).onfinish=()=>e.remove();
+      }
+    }
+
+    function spawnWaterDrop(){
+      const layer = particlesLayer;
+      const rect = hole.getBoundingClientRect();
+      const wrapRect = gameWrap.getBoundingClientRect();
+      const originX = rect.left + rect.width/2 - wrapRect.left;
+      const originY = rect.top - wrapRect.top + 10;
+
+      const drop = document.createElement('div');
+      drop.style.position = 'absolute';
+      drop.style.left = originX + 'px';
+      drop.style.top = originY + 'px';
+      drop.style.width = drop.style.height = (6 + Math.random()*4) + 'px';
+      drop.style.borderRadius = '50%';
+      drop.style.background = '#4fc3f7';
+      drop.style.opacity = '0.9';
+      layer.appendChild(drop);
+
+      drop.animate([
+        { transform: 'translateY(0)', opacity: 1 },
+        { transform: `translateY(${80+Math.random()*50}px)`, opacity: 0.3 }
+      ], {
+        duration: 600,
+        easing: 'cubic-bezier(.2,.8,.2,1)'
+      }).onfinish = () => drop.remove();
+    }
+
+    function resetParticles(){ particlesLayer.innerHTML=''; }
+
+    // ---- Confetti ----
+    function confetti(count=80){
+      const canvas = confettiCanvas;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width; const H = canvas.height;
+      let parts=[];
+      for(let i=0;i<count;i++){
+        parts.push({
+          x:Math.random()*W,
+          y:Math.random()*-H*0.6,
+          vx:(Math.random()-0.5)*3,
+          vy:2+Math.random()*4,
+          size:4+Math.random()*8,
+          color:['#ff6b6b','#ffd166','#8bd3c7','#6b5bff'][Math.floor(Math.random()*4)],
+          rot:Math.random()*360, angular:Math.random()*6-3
+        });
+      }
+      function loop(){
+        ctx.clearRect(0,0,W,H);
+        parts.forEach(p=>{
+          p.vy+=0.06;
+          p.x+=p.vx;
+          p.y+=p.vy;
+          p.rot+=p.angular;
+          ctx.save();
+          ctx.translate(p.x,p.y);
+          ctx.rotate(p.rot*Math.PI/180);
+          ctx.fillStyle=p.color;
+          ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*0.6);
+          ctx.restore();
+        });
+        parts = parts.filter(p=>p.y < H+50);
+        if(parts.length) requestAnimationFrame(loop); else ctx.clearRect(0,0,W,H);
+      }
+      loop();
+    }
+
+    // ---- Badge overlay & voice & sound ----
+    let badgeTimeout;
+    function showBadge(title, subtext=''){
+      badge.classList.add('show');
+      badgeText.innerText = title;
+      badgeSub.innerText = subtext;
+      clearTimeout(badgeTimeout);
+      badgeTimeout = setTimeout(()=>badge.classList.remove('show'),1200);
+    }
+
+    function playVoice(text){
+      if('speechSynthesis' in window){
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'en-US';
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+      }
+    }
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function beep(){
+      try{
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        g.gain.value = 0.02;
+        o.frequency.value = 880;
+        o.type = 'sine';
+        o.start();
+        setTimeout(()=>o.stop(),120);
+      }catch(e){/* ignore on platforms that block audio */ }
+    }
+
+    // ---- UI helpers ----
+    function showTools(list){
+      toolShovel.style.display = list.includes('shovel') ? 'flex' : 'none';
+      toolSeed.style.display = list.includes('seed') ? 'flex' : 'none';
+      toolSoil.style.display = list.includes('soil') ? 'flex' : 'none';
+    }
+    function showHole(){ hole.style.opacity = 1; hole.style.transform = 'translateY(0) scale(1)'; hole.style.display='block'; }
+    function hideHole(){ hole.style.opacity = 0; hole.style.transform='translateY(16px) scale(.9)'; /* leave display to logic */ }
+    function showSeedlingAtEdge(){ seedling.style.opacity=1; seedling.style.transform='translateX(-50%) translateY(6px) scale(1)'; seedling.style.left='50%'; }
+    function showSeedlingPlanted(){ seedling.style.opacity=1; seedling.style.transform='translateX(-50%) translateY(0) scale(1.02)'; }
+    function hideSeedling(){ seedling.style.opacity=0; }
+    function showWaterJar(){ waterJar.style.display='flex'; }
+    function hideWaterJar(){ waterJar.style.display='none'; }
+    function showTree(){ grownTree.style.opacity=1; grownTree.style.transform='translateX(-50%) scale(1)'; }
+    function hideTree(){ grownTree.style.opacity=0; grownTree.style.transform='translateX(-50%) scale(0.6)'; }
+
+    // ---- Step logic ----
+    function hintTextForStep(id){
+      switch(id){
+        case 'dig': return 'Drag the green-shaded shovel to the ground near the middle.';
+        case 'place': return 'Drag the seedling into the dark oval hole.';
+        case 'cover': return 'Tap soil 3 times quickly to cover the roots.';
+        case 'water': return 'Hold the water jar until the stream fills.';
+        default: return 'Well done!';
+      }
+    }
+
+    function stepInfo(){ scoreEl.innerText = score; }
+
+    function stepTo(i){
+      current = i;
+      const s = STEPS[current];
+      dialog.innerText = s.title;
+      sub.innerText = s.desc;
+      document.getElementById('hint').innerHTML = hintTextForStep(s.id);
+      // update UI for step
+      if(s.id==='dig'){
+        showTools(['shovel']);
+        hideSeedling(); hideTree(); hideHole(); resetParticles();
+        // ensure water jar hidden
+        hideWaterJar();
+      } else if(s.id==='place'){
+        showTools(['seed']);
+        showHole();
+        showSeedlingAtEdge();
+      } else if(s.id==='cover'){
+        showTools(['soil']);
+        showSeedlingPlanted();
+      } else if(s.id==='water'){
+        showTools([]);
+        showWaterJar();
+        // ensure seed is visible and planted state remains
+        showSeedlingPlanted();
+      } else if(s.id==='celebrate'){
+        doCelebrate();
+      }
+      stepInfo();
+    }
+
+    // ---- Drag helpers (clone dragging) ----
+    function attachDraggableFromTool(toolEl, successCallback){
+      toolEl.addEventListener('pointerdown', (ev)=>{
+        ev.preventDefault();
+        // clone visuals to drag inside gameWrap (so original tool remains)
+        const clone = toolEl.cloneNode(true);
+        clone.style.position='absolute';
+        clone.style.zIndex=9999;
+        // set clone initial position relative to gameWrap
+        const tRect = toolEl.getBoundingClientRect();
+        const wrapRect = gameWrap.getBoundingClientRect();
+        clone.style.left = (tRect.left - wrapRect.left) + 'px';
+        clone.style.top = (tRect.top - wrapRect.top) + 'px';
+        clone.style.pointerEvents='none';
+        gameWrap.appendChild(clone);
+
+        let offsetX = ev.clientX - tRect.left;
+        let offsetY = ev.clientY - tRect.top;
+
+        function move(e){
+          clone.style.left = (e.clientX - wrapRect.left - offsetX) + 'px';
+          clone.style.top = (e.clientY - wrapRect.top - offsetY) + 'px';
+        }
+
+        function up(e){
+          document.removeEventListener('pointermove', move);
+          document.removeEventListener('pointerup', up);
+          // determine drop
+          const dropX = e.clientX - wrapRect.left;
+          const dropY = e.clientY - wrapRect.top;
+          const holeRect = hole.getBoundingClientRect();
+          const holeCenterX = holeRect.left - wrapRect.left + holeRect.width/2;
+          const holeCenterY = holeRect.top - wrapRect.top + holeRect.height/2;
+          const dx = dropX - holeCenterX;
+          const dy = dropY - holeCenterY;
+          const dist2 = dx*dx + dy*dy;
+          clone.remove();
+          // success zone radius is based on hole size
+          if(dist2 < (holeRect.width/1.8)*(holeRect.height/1.8)){
+            successCallback();
+          } else {
+            // nothing, user missed the hole
+            // small feedback
+            playVoice('Try dropping it closer to the hole.');
+          }
+        }
+
+        document.addEventListener('pointermove', move);
+        document.addEventListener('pointerup', up);
+      });
+    }
+
+    // ---- Dig / Plant actions ----
+    function digHole(){
+      return new Promise(resolve=>{
+        // calculate an origin near the hole position for particles
+        const origin = { x: gameWrap.clientWidth/2, y: gameWrap.clientHeight*0.66 };
+        spawnSoilParticles(26, origin);
+        hole.style.transition = 'all 520ms cubic-bezier(.2,.85,.2,1)';
+        hole.style.opacity = 1; hole.style.transform = 'translateY(0) scale(1)';
+        setTimeout(()=>resolve(),580);
+      });
+    }
+
+    function plantSeed(){
+      return new Promise(resolve=>{
+        seedling.style.opacity = 1;
+        seedling.style.transform = 'translateX(-50%) translateY(0) scale(1)';
+        // small pop animation to emphasize placement
+        seedling.animate(
+          [
+            {transform:'translateX(-50%) translateY(10px) scale(.95)'},
+            {transform:'translateX(-50%) translateY(0) scale(1.03)'},
+            {transform:'translateX(-50%) translateY(0) scale(1)'}
+          ],
+          {duration:420,easing:'cubic-bezier(.2,.8,.2,1)'}
+        );
+        setTimeout(()=>resolve(),450);
+      });
+    }
+
+    function plantSeedSuccess(){
+      // make sure seed visually sits in hole center
+      seedling.style.left = '50%';
+      seedling.style.bottom = '28%';
+      seedling.style.transform = 'translateX(-50%) translateY(0) scale(1)';
+      const origin = { x: gameWrap.clientWidth/2, y: gameWrap.clientHeight*0.68 };
+      spawnSoilParticles(18, origin);
+      setTimeout(()=>{ showSuccessAndAdvance('Seed placed!'); },600);
+    }
+
+    // ---- Attach draggable behaviour to tools ----
+    attachDraggableFromTool(toolShovel, ()=>{ digHole().then(()=>{ beep(); showBadge('Hole dug'); stepTo(1); score += 10; }); });
+    attachDraggableFromTool(toolSeed, ()=>{ plantSeedSuccess(); score += 10; });
+
+    // ---- Soil tap behavior ----
+    toolSoil.addEventListener('click', ()=>{
+      if(STEPS[current].id !== 'cover'){ playVoice('Use the soil when it asks to cover the roots.'); return; }
+      soilTaps++;
+      // spawn soil around the hole center to make it look like covering
+      const holeRect = hole.getBoundingClientRect();
+      const wrapRect = gameWrap.getBoundingClientRect();
+      const origin = { x: holeRect.left - wrapRect.left + holeRect.width/2, y: holeRect.top - wrapRect.top + holeRect.height/2 };
+      spawnSoilParticles(12, origin);
+      playVoice('Covering the roots');
+      if(soilTaps >= (STEPS[current].required || 3)){
+        score += 10;
+        showBadge('Covered!');
+        // small mound animation over the hole: create a div, animate height
+        const mound = document.createElement('div');
+        mound.style.position='absolute';
+        const wrapRect2 = gameWrap.getBoundingClientRect();
+        const leftPos = origin.x - 40; // center mound on origin
+        const topPos = origin.y + 10;
+        mound.style.left = leftPos + 'px';
+        mound.style.top = topPos + 'px';
+        mound.style.width = '80px';
+        mound.style.height = '8px';
+        mound.style.background = '#6d4c41';
+        mound.style.borderRadius = '50%';
+        mound.style.transformOrigin = 'center bottom';
+        mound.style.opacity = '0';
+        mound.style.pointerEvents = 'none';
+        particlesLayer.appendChild(mound);
+        // animate mound appearing
+        mound.animate([{transform:'scaleY(0.1)', opacity:0},{transform:'scaleY(1)', opacity:1}], {duration:520, easing:'cubic-bezier(.2,.8,.2,1)'}).onfinish = ()=>{
+          // keep mound for a bit then remove when resetting
+        };
+        // advance to water step after a short delay
+        setTimeout(()=>{ stepTo(3); showBadge('Soil covered'); showWaterJar(); }, 600);
+      }
+    });
+
+    // ---- Water: the corrected logic ----
+    // Behavior:
+    // - on pointerdown: if current step is water, set waterActive=true and waterHoldStart=performance.now()
+    // - on pointerup: if waterActive true -> immediately stop emitting particles and check elapsed time
+    // - The animation loop spawns particles only while waterActive is true and positions them at hole center (so water falls directly on seed)
+    // - If continuous hold (waterActive) reaches requiredWaterMs, we mark success
+    function startWaterHold(e){
+      if(STEPS[current].id !== 'water') return;
+      // ensure hole exists (safety)
+      const holeRectCheck = hole.getBoundingClientRect();
+      if(holeRectCheck.width === 0 && holeRectCheck.height === 0){
+        playVoice('Place the seed first.');
+        return;
+      }
+      // begin hold
+      waterActive = true;
+      waterHoldStart = performance.now();
+      waterJar.setAttribute('aria-pressed','true');
+      // small visual feedback (optional)
+      showBadge('Pouring...');
+    }
+
+    function stopWaterHold(e){
+      if(STEPS[current].id !== 'water') return;
+      // stop particle emission immediately
+      waterActive = false;
+      waterJar.setAttribute('aria-pressed','false');
+      // check whether we held long enough
+      if(!waterHoldStart){
+        // nothing to do
+        return;
+      }
+      const elapsed = performance.now() - waterHoldStart;
+      waterHoldStart = null;
+      if(elapsed >= requiredWaterMs){
+        // success: water completed
+        score += 10;
+        showBadge('Watered!');
+        growTree();
+        stepTo(4); // celebration
+      } else {
+        // inform user they need to hold longer (reset)
+        playVoice('Hold a little longer to pour enough water.');
+      }
+    }
+
+    // Attach pointer events: support pointer/touch/mouse universally
+    waterJar.addEventListener('pointerdown', (e)=>{
+      e.preventDefault();
+      startWaterHold(e);
+    });
+    // use pointerup on document to ensure release outside jar is captured
+    document.addEventListener('pointerup', (e)=>{
+      if(waterActive) stopWaterHold(e);
+    });
+
+    // Also support touchend fallback (some environments)
+    document.addEventListener('touchend', (e)=>{
+      if(waterActive) stopWaterHold(e);
+    });
+
+    // ---- drawWaterStream used by animation loop: spawns droplets at hole center while waterActive ----
+    function drawWaterStream(pct){
+      // rather than using a fixed side spawn location, compute hole center in gameWrap coordinates:
+      const holeRect = hole.getBoundingClientRect();
+      const wrapRect = gameWrap.getBoundingClientRect();
+      const spawnX = holeRect.left - wrapRect.left + holeRect.width/2;
+      const spawnY = holeRect.top - wrapRect.top + 6; // slightly above top of hole
+      // number of droplets depends on pct (how long held)
+      const dropletCount = 1 + Math.round(pct * 6);
+      for(let i=0;i<dropletCount;i++){
+        const d = document.createElement('div');
+        d.style.position='absolute';
+        // small horizontal randomness around spawnX
+        d.style.left = (spawnX + (Math.random()-0.5)*14) + 'px';
+        d.style.top = (spawnY + Math.random()*6) + 'px';
+        d.style.width = '6px';
+        d.style.height = '10px';
+        d.style.background = 'linear-gradient(180deg,#9be7ff,#58c0ff)';
+        d.style.borderRadius = '4px';
+        d.style.opacity = '0.95';
+        d.style.pointerEvents = 'none';
+        particlesLayer.appendChild(d);
+        // animate droplet down into the hole
+        const fallDist = 80 + Math.random()*40; // distance droplet travels
+        const dur = 500 + Math.random()*300;
+        d.animate([{transform:'translateY(0)', opacity:1},{transform:`translateY(${fallDist}px)`, opacity:0}], {duration:dur, easing:'cubic-bezier(.2,.9,.2,1)'}).onfinish = ()=>d.remove();
+      }
+    }
+
+    // ---- Animation loop: particles and water emission controller ----
+    // We use RAF to ensure smooth visuals and immediate emission stop when waterActive flips false.
+    let lastFrame = performance.now();
+    function animationLoop(now){
+      // compute pct for water hold for visuals only
+      if(waterActive && waterHoldStart){
+        const elapsed = now - waterHoldStart;
+        const pct = Math.min(1, elapsed / requiredWaterMs);
+        // spawn water droplets at hole center
+        drawWaterStream(pct);
+        // if elapsed reached requiredWaterMs here we could optionally perform the success here,
+        // but we rely on stopWaterHold to perform the final check when user releases.
+        // However, to support the case where game should succeed immediately once 1.6s is reached
+        // even if user keeps holding, we check here as well:
+        if(elapsed >= requiredWaterMs){
+          // Mark success immediately while still holding
+          waterActive = false;
+          waterHoldStart = null;
+          waterJar.setAttribute('aria-pressed','false');
+          score += 10;
+          showBadge('Watered!');
+          growTree();
+          stepTo(4);
+        }
+      }
+      // nothing else to draw via JS here (particles are DOM elements)
+      // continue loop
+      requestAnimationFrame(animationLoop);
+    }
+    requestAnimationFrame(animationLoop);
+
+    // ---- growTree and celebration ----
+    function growTree(){
+      // show grown tree
+      showTree();
+      spawnLeafParticles(26);
+      confetti(120);
+      playVoice('Your tree will grow nicely!');
+    }
+
+    // ---- Success helpers ----
+    function showSuccessAndAdvance(msg){
+      beep();
+      showBadge(msg);
+      setTimeout(()=>{
+        if(current < STEPS.length-1) stepTo(current+1);
+      },800);
+    }
+
+    // ---- Next / Hint / Restart controls ----
+    nextBtn.addEventListener('click', ()=>{
+      if(current < STEPS.length-1){
+        playVoice(STEPS[current].desc);
+        showBadge('Try it now');
+      } else {
+        showBadge('Restart to play again');
+      }
+    });
+    hintBtn.addEventListener('click', ()=>{ playVoice(STEPS[current].desc); });
+    restartBtn.addEventListener('click', ()=>{ if(confirm('Restart the game?')) restart(); });
+
+    function restart(){
+      current = 0;
+      score = 0;
+      soilTaps = 0;
+      hideTree();
+      hideWaterJar();
+      hideSeedling();
+      hideHole();
+      resetParticles();
+      stepTo(0);
+    }
+
+    // ---- Accessibility and init ----
+    function init(){
+      stepTo(0);
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Enter') nextBtn.click(); if(e.key==='r') restart(); });
+      // resume audio on first user gesture if suspended
+      ['pointerdown','touchstart','click'].forEach(evt=>document.addEventListener(evt, ()=>{ if(audioCtx && audioCtx.state==='suspended') audioCtx.resume(); }, {once:true}));
+    }
+
+    // ---- Attach dragging behaviour for shovel/seed that was used earlier ----
+    // We provided attachDraggableFromTool above, and already attached shovel and seed.
+    // Re-attach soil tool to click (already above). Ensure waterJar click/hold behavior is attached:
+    // waterJar pointerdown is handled by startWaterHold and pointerup by document listener.
+
+    // Defensive: ensure waterJar is hidden until water step
+    hideWaterJar();
+
+    // Start the game
+    init();
+
+    // Note: the code intentionally uses DOM-particle approach for soil/water/leaf visual effects
+    // to keep the UI elements flexible and to make emission stop instantly when waterActive flips false.
+
+    // End of script.
+  </script>
+</body>
+</html>
